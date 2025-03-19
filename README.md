@@ -1,6 +1,6 @@
-# myflutter01
+# Access by KAI
 
-Flutter project 01.
+Access by KAI copy.
 
 ## Getting Started
 
