@@ -34,140 +34,156 @@ class _BerandaScreenState extends State<BerandaScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Background content (header and scrollable content)
-        Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: _kaiPayCardHeight + 16),
-                    _buildTransportOptions(),
-                    const SizedBox(height: 24),
-                    _buildAdditionalServices(),
-                    const SizedBox(height: 24),
-                    _buildTripPlanner(),
-                    const SizedBox(height: 24),
-                    _buildPromoSection(),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+Widget build(BuildContext context) {
+  return Stack(
+    children: [
+      // Background content (header and scrollable content)
+      Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Increase this height to ensure content starts below the card
+                  const SizedBox(height: 120), // Adjust this value as needed
+                  _buildTransportOptions(),
+                  const SizedBox(height: 24),
+                  _buildAdditionalServices(),
+                  const SizedBox(height: 24),
+                  _buildTripPlanner(),
+                  const SizedBox(height: 24),
+                  _buildPromoSection(),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-          ],
-        ),
-        // KAI Pay Card (overlapping the header)
-        Positioned(
-          top: 130, // Adjusted to match the overlap in the image
-          left: 0,
-          right: 0,
-          child: Container(
-            key: _kaiPayCardKey,
-            child: _buildKaiPayCard(),
           ),
-        ),
-      ],
-    );
-  }
-
-Widget _buildHeader() {
-  return Container(
-    height: 250, // Adjust this value to extend the background downward
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          AppColors.secondaryDark,
-          AppColors.secondary,
         ],
       ),
-      image: DecorationImage(
-        image: AssetImage(AssetPaths.cityscape),
-        fit: BoxFit.cover,
-        opacity: 0.1,
+      // KAI Pay Card (overlapping the header)
+      Positioned(
+        top: 140, // Adjust this value to control the overlap
+        left: 0,
+        right: 0,
+        child: _buildKaiPayCard(),
       ),
-    ),
-    child: SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Selamat Pagi',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'ABDUL ALIM',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                _buildCircleButton(
-                  icon: Icons.shopping_cart_outlined,
-                  label: '',
-                ),
-                const SizedBox(width: 12),
-                _buildCircleButton(
-                  icon: Icons.mail_outline,
-                  label: '',
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.headset_mic_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      SizedBox(width: 6),
-                      Text(
-                        'Bantuan',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
+    ],
   );
 }
+
+  Widget _buildHeader() {
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.indigo.shade800,
+            Colors.purple.shade700,
+          ],
+        ),
+        image: DecorationImage(
+          image: AssetImage(AssetPaths.cityscape),
+          fit: BoxFit.cover,
+          opacity: 0.2,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Selamat Pagi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'ABDUL ALIM',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.mail_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.headset_mic_outlined,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Bantuan',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildCircleButton({required IconData icon, required String label}) {
     return Container(
@@ -590,3 +606,4 @@ class PentagonPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+

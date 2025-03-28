@@ -117,6 +117,7 @@ class TiketScreen extends StatelessWidget {
                     'CEK & TAMBAH TIKET',
                     style: TextStyle(
                       fontSize: 16,
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

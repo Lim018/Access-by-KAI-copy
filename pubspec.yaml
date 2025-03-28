@@ -66,6 +66,7 @@ flutter:
     - assets/images/jogja.jpg
     - assets/images/tickets.png
     - assets/images/eyewear.jpg
+    - assets/images/wisata.jpg
 
   # To add assets to your application, add an assets section, like this:
 #   assets:
