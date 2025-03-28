@@ -158,10 +158,10 @@ class PromoScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         _buildPromoCard(
-                          title: 'APRIL EYEWEAR',
+                          title: 'APRIL FOOTWEAR',
                           discountText: 'Diskon Spesial\nSampai Dengan',
                           discountPercent1: '15',
-                          imagePath: AssetPaths.eyewear,
+                          imagePath: AssetPaths.shoes,
                         ),
                         const SizedBox(height: 16),
                         _buildPromoCard(
@@ -173,7 +173,6 @@ class PromoScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-            
                   const SizedBox(height: 24),
                 ],
               ),
