@@ -21,7 +21,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final session = await _appwrite.account.createEmailSession(
+      final session = await _appwrite.account.createEmailPasswordSession(
         email: email,
         password: password,
       );
