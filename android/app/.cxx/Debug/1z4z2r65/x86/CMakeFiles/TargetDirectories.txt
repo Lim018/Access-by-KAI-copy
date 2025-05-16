@@ -1,0 +1,2 @@
+/Users/alim/Access-by-KAI-copy/android/app/.cxx/Debug/1z4z2r65/x86/CMakeFiles/edit_cache.dir
+/Users/alim/Access-by-KAI-copy/android/app/.cxx/Debug/1z4z2r65/x86/CMakeFiles/rebuild_cache.dir
