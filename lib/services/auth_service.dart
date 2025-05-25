@@ -1,88 +1,27 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:flutter/material.dart';
-import '../services/appwrite_service.dart';
+import '../models/user_model.dart';
+import 'appwrite_service.dart';
+import 'appwrite_config.dart';
+import 'user_service.dart';
 
 class AuthService {
-  final AppwriteService _appwrite = AppwriteService();
-  
   // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
-  AuthService._internal();
-  
-  // Current user
+  AuthService._internal() {
+    AppwriteService.initialize(); // Initialize AppwriteService
+  }
+
+  // Current user and session
   models.User? currentUser;
   models.Session? currentSession;
-  
-  // Login user
-  Future<models.Session> login({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final session = await _appwrite.account.createEmailPasswordSession(
-        email: email,
-        password: password,
-      );
-      
-      currentSession = session;
-      await _getCurrentUser();
-      
-      return session;
-    } on AppwriteException catch (e) {
-      debugPrint('Login error: ${e.message}');
-      throw e;
-    }
-  }
-  
-  // Register user
-  Future<models.User> register({
-    required String name,
-    required String email,
-    required String password,
-    required String phone,
-  }) async {
-    try {
-      final user = await _appwrite.account.create(
-        userId: ID.unique(),
-        email: email,
-        password: password,
-        name: name,
-      );
-      
-      // Create extended user profile in database
-      await _appwrite.databases.createDocument(
-        databaseId: _appwrite.databaseId,
-        collectionId: _appwrite.usersCollectionId,
-        documentId: user.$id,
-        data: {
-          'name': name,
-          'email': email,
-          'phone': phone,
-          'member_status': 'Basic',
-          'kaipay_activated': false,
-          'kaipay_balance': 0,
-          'rail_points': 0,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-      );
-      
-      // Login after registration
-      await login(email: email, password: password);
-      
-      return user;
-    } on AppwriteException catch (e) {
-      debugPrint('Register error: ${e.message}');
-      throw e;
-    }
-  }
-  
+
   // Get current user
-  Future<models.User?> _getCurrentUser() async {
+  Future<models.User?> getCurrentUser() async {
     try {
-      currentUser = await _appwrite.account.get();
+      currentUser = await AppwriteService.account.get();
       return currentUser;
     } on AppwriteException catch (e) {
       debugPrint('Get current user error: ${e.message}');
@@ -90,31 +29,130 @@ class AuthService {
       return null;
     }
   }
-  
+
+  // Sign up user
+  Future<UserModel?> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+    String? phoneNumber,
+  }) async {
+    try {
+      debugPrint('Mencoba membuat akun untuk email: $email');
+      final user = await AppwriteService.account.create(
+        userId: ID.unique(),
+        email: email,
+        password: password,
+        name: fullName,
+      );
+      debugPrint('Akun berhasil dibuat: ${user.$id}');
+
+      // Tidak perlu signIn karena account.create sudah membuat sesi aktif
+      debugPrint('Sesi aktif untuk pengguna: ${user.$id}');
+
+      // Buat profil pengguna
+      debugPrint('Membuat profil pengguna untuk userId: ${user.$id}');
+      final userProfile = await UserService.createUserProfile(
+        userId: user.$id,
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+      );
+      debugPrint('Profil pengguna berhasil dibuat: ${userProfile.id}');
+
+      // Simpan pengguna dan sesi saat ini
+      currentUser = user;
+      currentSession = await AppwriteService.account.getSession(sessionId: 'current');
+      debugPrint('Sesi saat ini: ${currentSession?.$id}');
+
+      return userProfile;
+    } on AppwriteException catch (e) {
+      debugPrint('Gagal mendaftar: ${e.message}, Kode: ${e.code}, Tipe: ${e.type}');
+      throw e;
+    }
+  }
+  // Sign in user
+  Future<UserModel?> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final session = await AppwriteService.account.createEmailPasswordSession(
+        email: email,
+        password: password,
+      );
+
+      currentSession = session;
+      final user = await getCurrentUser();
+
+      if (user != null) {
+        final userProfile = await UserService.getUserProfile(user.$id);
+        return userProfile;
+      }
+
+      return null;
+    } on AppwriteException catch (e) {
+      debugPrint('Sign in error: ${e.message}');
+      throw e;
+    }
+  }
+
+  // Sign out user
+  Future<void> signOut() async {
+    try {
+      if (currentSession != null) {
+        await AppwriteService.account.deleteSession(
+          sessionId: currentSession!.$id,
+        );
+      }
+      currentUser = null;
+      currentSession = null;
+    } on AppwriteException catch (e) {
+      debugPrint('Sign out error: ${e.message}');
+      throw e;
+    }
+  }
+
+  // Reset password
+  Future<void> resetPassword({
+    required String email,
+  }) async {
+    try {
+      // Create a password recovery request
+      await AppwriteService.account.createRecovery(
+        email: email,
+        url: 'YOUR_PASSWORD_RESET_REDIRECT_URL', // Replace with your redirect URL
+      );
+    } on AppwriteException catch (e) {
+      debugPrint('Reset password error: ${e.message}');
+      throw e;
+    }
+  }
+
   // Get user profile
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
       if (currentUser == null) {
-        await _getCurrentUser();
+        await getCurrentUser();
       }
-      
+
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
-      
-      final document = await _appwrite.databases.getDocument(
-        databaseId: _appwrite.databaseId,
-        collectionId: _appwrite.usersCollectionId,
+
+      final document = await AppwriteService.databases.getDocument(
+        databaseId: AppwriteService.databaseId,
+        collectionId: AppwriteService.usersCollectionId,
         documentId: currentUser!.$id,
       );
-      
+
       return document.data;
     } on AppwriteException catch (e) {
       debugPrint('Get user profile error: ${e.message}');
       throw e;
     }
   }
-  
+
   // Update user profile
   Future<void> updateUserProfile({
     String? name,
@@ -123,31 +161,31 @@ class AuthService {
   }) async {
     try {
       if (currentUser == null) {
-        await _getCurrentUser();
+        await getCurrentUser();
       }
-      
+
       if (currentUser == null) {
         throw Exception('User not authenticated');
       }
-      
+
       // Update account name if provided
       if (name != null) {
-        await _appwrite.account.updateName(name: name);
+        await AppwriteService.account.updateName(name: name);
       }
-      
+
       // Prepare data for update
       final Map<String, dynamic> data = {
         'updated_at': DateTime.now().toIso8601String(),
       };
-      
+
       if (name != null) data['name'] = name;
       if (phone != null) data['phone'] = phone;
       if (avatarUrl != null) data['avatar_url'] = avatarUrl;
-      
+
       // Update user profile in database
-      await _appwrite.databases.updateDocument(
-        databaseId: _appwrite.databaseId,
-        collectionId: _appwrite.usersCollectionId,
+      await AppwriteService.databases.updateDocument(
+        databaseId: AppwriteService.databaseId,
+        collectionId: AppwriteService.usersCollectionId,
         documentId: currentUser!.$id,
         data: data,
       );
@@ -156,14 +194,14 @@ class AuthService {
       throw e;
     }
   }
-  
+
   // Change password
   Future<void> changePassword({
     required String oldPassword,
     required String newPassword,
   }) async {
     try {
-      await _appwrite.account.updatePassword(
+      await AppwriteService.account.updatePassword(
         password: newPassword,
         oldPassword: oldPassword,
       );
@@ -172,27 +210,11 @@ class AuthService {
       throw e;
     }
   }
-  
-  // Logout
-  Future<void> logout() async {
-    try {
-      if (currentSession != null) {
-        await _appwrite.account.deleteSession(
-          sessionId: currentSession!.$id,
-        );
-      }
-      currentUser = null;
-      currentSession = null;
-    } on AppwriteException catch (e) {
-      debugPrint('Logout error: ${e.message}');
-      throw e;
-    }
-  }
-  
+
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
     try {
-      final user = await _getCurrentUser();
+      final user = await getCurrentUser();
       return user != null;
     } catch (e) {
       return false;

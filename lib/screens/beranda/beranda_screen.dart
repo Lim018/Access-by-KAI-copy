@@ -3,6 +3,8 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_text_styles.dart';
 import '../../constants/assets_path.dart';
 import '../../widgets/android_nav_bar.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class BerandaScreen extends StatefulWidget {
   const BerandaScreen({Key? key}) : super(key: key);
@@ -25,7 +27,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
 
   void _getKaiPayCardHeight() {
     final RenderBox? renderBox =
-        _kaiPayCardKey.currentContext?.findRenderObject() as RenderBox?;
+    _kaiPayCardKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {
       setState(() {
         _kaiPayCardHeight = renderBox.size.height;
@@ -34,46 +36,50 @@ class _BerandaScreenState extends State<BerandaScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Stack(
-    children: [
-      // Background content (header and scrollable content)
-      Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Increase this height to ensure content starts below the card
-                  const SizedBox(height: 120), // Adjust this value as needed
-                  _buildTransportOptions(),
-                  const SizedBox(height: 24),
-                  _buildAdditionalServices(),
-                  const SizedBox(height: 24),
-                  _buildTripPlanner(),
-                  const SizedBox(height: 24),
-                  _buildPromoSection(),
-                  const SizedBox(height: 24),
-                ],
+  Widget build(BuildContext context) {
+    // Get user data from auth provider
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userName = authProvider.user?.fullName ?? 'Pengguna';
+
+    return Stack(
+      children: [
+        // Background content (header and scrollable content)
+        Column(
+          children: [
+            _buildHeader(userName),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Increase this height to ensure content starts below the card
+                    const SizedBox(height: 120), // Adjust this value as needed
+                    _buildTransportOptions(),
+                    const SizedBox(height: 24),
+                    _buildAdditionalServices(),
+                    const SizedBox(height: 24),
+                    _buildTripPlanner(),
+                    const SizedBox(height: 24),
+                    _buildPromoSection(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      // KAI Pay Card (overlapping the header)
-      Positioned(
-        top: 140, // Adjust this value to control the overlap
-        left: 0,
-        right: 0,
-        child: _buildKaiPayCard(),
-      ),
-    ],
-  );
-}
+          ],
+        ),
+        // KAI Pay Card (overlapping the header)
+        Positioned(
+          top: 140, // Adjust this value to control the overlap
+          left: 0,
+          right: 0,
+          child: _buildKaiPayCard(authProvider),
+        ),
+      ],
+    );
+  }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(String userName) {
     return Container(
       height: 250,
       decoration: BoxDecoration(
@@ -100,8 +106,8 @@ Widget build(BuildContext context) {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Selamat Pagi',
                     style: TextStyle(
                       color: Colors.white,
@@ -109,10 +115,10 @@ Widget build(BuildContext context) {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'ABDUL ALIM',
-                    style: TextStyle(
+                    userName.toUpperCase(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -201,10 +207,15 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget _buildKaiPayCard() {
+  Widget _buildKaiPayCard(AuthProvider authProvider) {
+    final railPoints = authProvider.user?.railPoints ?? 0;
+    final membershipType = authProvider.user?.membershipType ?? 'Basic';
+    final isKaiPayActivated = authProvider.user?.kaiPayBalance != null && authProvider.user!.kaiPayBalance > 0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
+        key: _kaiPayCardKey,
         elevation: 8,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
@@ -251,7 +262,10 @@ Widget build(BuildContext context) {
                     ],
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // Navigate to KAI Pay activation screen
+                      Navigator.pushNamed(context, '/kai-pay');
+                    },
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -263,7 +277,7 @@ Widget build(BuildContext context) {
                       ),
                     ),
                     child: Text(
-                      'Aktivasi KAIPay',
+                      isKaiPayActivated ? 'Lihat KAIPay' : 'Aktivasi KAIPay',
                       style: TextStyle(
                         color: Colors.blue.shade400,
                         fontSize: 14,
@@ -318,9 +332,9 @@ Widget build(BuildContext context) {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        '0 RailPoin',
-                        style: TextStyle(
+                      Text(
+                        '$railPoints RailPoin',
+                        style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
                         ),
@@ -345,7 +359,7 @@ Widget build(BuildContext context) {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Basic',
+                          membershipType,
                           style: TextStyle(
                             color: Colors.blue.shade700,
                             fontWeight: FontWeight.w500,
@@ -530,7 +544,10 @@ Widget build(BuildContext context) {
               ),
             ),
             OutlinedButton(
-              onPressed: () {},
+              onPressed: () {
+                // Navigate to trip planner
+                Navigator.pushNamed(context, '/ticket-booking');
+              },
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.white),
                 shape: RoundedRectangleBorder(
@@ -562,7 +579,10 @@ Widget build(BuildContext context) {
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to promo tab
+              Navigator.pushNamed(context, '/promo');
+            },
             child: const Text(
               'Lihat Semua',
               style: TextStyle(
@@ -606,4 +626,3 @@ class PentagonPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
-
